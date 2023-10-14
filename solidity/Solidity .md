@@ -360,7 +360,7 @@ ActionSet action = ActionSet.Buy;
 
 ### 函数关键字以及函数格式
 
-![image-20231011205021822](C:\Users\01\Desktop\智能合约工程师\Smart-contract\img\image-20231011205021822.png)
+![image-20231011205021822](.\img\image-20231011205021822.png)
 
 ```solidity
     function <function name>(<parameter types>) {internal|external|public|private} [pure|view|payable] [returns (<return types>)]
@@ -944,7 +944,7 @@ keccak256("Transfer(addrses,address,uint256)")
 
 点击`Logs`按钮，就能看到事件明细：
 
-![gx6_wDMYEl8_Gc_JkTIKn](C:\Users\01\Desktop\智能合约工程师\Smart-contract\img\gx6_wDMYEl8_Gc_JkTIKn.png)
+![gx6_wDMYEl8_Gc_JkTIKn](.\img\gx6_wDMYEl8_Gc_JkTIKn.png)
 
 > `Topics`里面有三个元素，`[0]`是这个事件的哈希，`[1]`和`[2]`是我们定义的两个`indexed`变量的信息，即转账的转出地址和接收地址。`Data`里面是剩下的不带`indexed`的变量，也就是转账数量
 
