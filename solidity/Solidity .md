@@ -1353,7 +1353,36 @@ interface IERC721 is IERC165 {
 
 如果我们知道一个合约实现了`IERC721`接口，我们不需要知道它具体代码实现，就可以与它交互。
 
-==例子==
+#### 接口使用举例
+
+> 无聊猿`BAYC`属于`ERC721`代币，实现了`IERC721`接口的功能。我们不需要知道它的源代码，只需知道它的合约地址，用`IERC721`接口就可以与它交互，比如用`balanceOf()`来查询某个地址的`BAYC`余额，用`safeTransferFrom()`来转账`BAYC`。
+
+
+
+```solidity
+contract interactBAYC {
+    // 利用BAYC地址创建接口合约变量（ETH主网）
+    IERC721 BAYC = IERC721(0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D);
+
+    // 通过接口调用BAYC的balanceOf()查询持仓量
+    function balanceOfBAYC(address owner) external view returns (uint256 balance){
+        return BAYC.balanceOf(owner);
+    }
+
+    // 通过接口调用BAYC的safeTransferFrom()安全转账
+    function safeTransferFromBAYC(address from, address to, uint256 tokenId) external{
+        BAYC.safeTransferFrom(from, to, tokenId);
+    }
+}
+```
+
+> ``代码解读``
+>
+> IERC721是一个接口名，它代表了ERC721标准的接口。ERC721是以太坊的一个开放标准，描述了如何创建非同质化（或者说是唯一化）的代币。
+>
+> 接口是一种合约，但它只包含未实现的函数。其他合约可以实现这些函数，以满足接口的规定。
+
+
 
 
 
@@ -1361,3 +1390,85 @@ interface IERC721 is IERC165 {
 
 
 
+> 写智能合约经常会出`bug`，`solidity`中的异常命令帮助我们`debug`。
+
+
+
+### Error
+
+
+
+> `error`是`solidity 0.8.4版本`新加的内容，方便且高效（省`gas`）地向用户解释操作失败的原因，同时还可以在抛出异常的同时携带参数，帮助开发者更好地调试。人们可以在`contract`之外定义异常。
+
+
+
+```solidity
+error TransferNotOwner(); // 自定义error
+
+error TransferNotOwner(address sender); // 自定义的带参数的error
+
+```
+
+
+
+> 在执行当中，`error`必须搭配`revert`（回退）命令使用。
+
+
+
+```solidity
+    function transferOwner1(uint256 tokenId, address newOwner) public {
+        if(_owners[tokenId] != msg.sender){
+            revert TransferNotOwner();
+            // revert TransferNotOwner(msg.sender);
+        }
+        _owners[tokenId] = newOwner;
+    }
+```
+
+`transferOwner1()`函数，它会检查代币的`owner`是不是发起人，如果不是，就会抛出`TransferNotOwner`异常；如果是的话，就会转账。
+
+
+
+### Require
+
+
+
+>比`error`命令消耗的gas要高（`gas`随着描述异常的字符串长度增加）。使用方法：`require(检查条件，"异常的描述")`，当检查条件不成立的时候，就会抛出异常。
+
+
+
+```solidity
+function transferOwner2(uint256 tokenId, address newOwner) public {
+    require(_owners[tokenId] == msg.sender, "Transfer Not Owner");
+    _owners[tokenId] = newOwner;
+}
+```
+
+
+
+### Assert
+
+`assert`命令一般用于程序员写程序`debug`，因为它不能解释抛出异常的原因（比`require`少个字符串）。它的用法很简单，`assert(检查条件）`，当检查条件不成立的时候，就会抛出异常。
+
+我们用`assert`命令重写一下上面的`transferOwner`函数：
+
+```solidity
+    function transferOwner3(uint256 tokenId, address newOwner) public {
+        assert(_owners[tokenId] == msg.sender);
+        _owners[tokenId] = newOwner;
+    }
+```
+
+
+
+### 总结
+
+| 异常处理方法 | 描述                                             | 消耗的Gas（大致值）                |
+| ------------ | ------------------------------------------------ | ---------------------------------- |
+| ``error``    | 向用户解释操作失败的原因                         | 24457（带参数：24660）（最小）     |
+| require      | Solidity 0.8版本之前常用于抛出异常；提供错误消息 | 24755 （随着提示字符的增加而增加） |
+| assert       | 用于程序员调试；在失败时消耗所有剩余的gas        | 24473                              |
+
+> tip:
+>
+> - Solidity 0.8.0之前的版本，`assert`抛出的是一个 `panic exception`，会把剩余的 `gas` 全部消耗，不会返还
